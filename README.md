@@ -1,3 +1,12 @@
+# NovelAITelegramBot
+
+对接 NovelAI 原版后端
+使用前修改 config.py 文件
+
+
+
+
+
 ## Docker 安装
 
 ```bash

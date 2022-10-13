@@ -9,6 +9,7 @@ async def request_api(
     scale: int = config.scale,
     steps: int = config.steps,
     uc: str = ", ".join(config.default_uc),
+    size: str = "512x512",
 ) -> str:
     """请求 ai 生成图片"""
     try:
@@ -19,13 +20,15 @@ async def request_api(
                 prompt = "best quality, " + prompt
             if "highres fix" not in prompt:
                 prompt = "highres fix, " + prompt
+            witdhxheight = size.split("x")
+
             data = {
                 "prompt": f"{prompt}",
                 "seed": seed,
                 "n_samples": 1,
                 "sampler": "k_euler_ancestral",
-                "width": 512,
-                "height": 512,
+                "width": witdhxheight[0],
+                "height": witdhxheight[1],
                 "scale": scale,
                 "steps": steps,
                 "uc": uc,

@@ -103,7 +103,9 @@ async def start(event: events.newmessage.NewMessage.Event):
 
 async def draw_image(event: events.CallbackQuery.Event, image_base64: str = None):
     uuid_prefix = get_uuid()
-    msg_event = await wait_msg_callback(bot=bot, event=event, msg="输入 prompt")
+    msg_event = await wait_msg_callback(
+        bot=bot, event=event, msg="输入 prompt", remove_text=True
+    )
     prompt = str(msg_event.message)
     data = {
         "prompt": f"{prompt}",
@@ -111,6 +113,7 @@ async def draw_image(event: events.CallbackQuery.Event, image_base64: str = None
         "uc": ", ".join(config.default_uc),
         "scale": 11,
         "steps": 40,
+        "size": "512x512",
     }
 
     btns = [
@@ -119,11 +122,12 @@ async def draw_image(event: events.CallbackQuery.Event, image_base64: str = None
         InputButton(text="scale", data=f"{uuid_prefix}#scale"),
         InputButton(text="steps", data=f"{uuid_prefix}#steps"),
         InputButton(text="seed", data=f"{uuid_prefix}#seed"),
+        InputButton(text="size", data=f"{uuid_prefix}#size"),
         InputButton(text="直接生成", data=f"{uuid_prefix}#generate"),
     ]
     while True:
         text_tips = (
-            f"scale: {data['scale']}\nsteps: {data['steps']}\nseed: {data['seed']}"
+            f"scale: {data['scale']}\nsteps: {data['steps']}\nsize: {data['size']}\nseed: {data['seed']}"
         )
         select = await wait_btn_callback(
             bot=bot, event=event, tips_text=f"{text_tips}\n设置其他参数:", btns=btns
@@ -131,12 +135,26 @@ async def draw_image(event: events.CallbackQuery.Event, image_base64: str = None
 
         if select.endswith("#generate"):
             break
+        elif select.endswith("#size"):
+            wh = await wait_btn_callback(
+                bot=bot,
+                event=event,
+                tips_text=f"设置 size",
+                btns=[
+                    InputButton(text=x, data=f"{uuid_prefix}#size#{x}")
+                    for x in config.witdhxheight
+                ],
+            )
+            data["size"] = wh.split("#")[-1]
         else:
             key = select.split("#")[1]
             value = str(
                 (
                     await wait_msg_callback(
-                        bot=bot, event=event, msg=f"当前值:\n{data[key]}\n设置 {key}"
+                        bot=bot,
+                        event=event,
+                        msg=f"当前值:\n{data[key]}\n设置 {key}",
+                        remove_text=True,
                     )
                 ).message
             )
@@ -152,7 +170,7 @@ async def draw_image(event: events.CallbackQuery.Event, image_base64: str = None
         end = time.time()
         await msg.delete()
         await msg_event.reply(
-            f"Steps: {config.steps}, Sampler: Euler a, CFG scale: {config.scale}, Seed: {data['seed']}\n耗时：{round(end - start, 3)}s",
+            f"Steps: {config.steps}, Sampler: Euler a, CFG scale: {config.scale}, Size: {data['size']}, Seed: {data['seed']}\n耗时：{round(end - start, 3)}s",
             file=base64.b64decode(res_image_base64),
         )
 
@@ -183,7 +201,7 @@ async def image2image(event: events.CallbackQuery.Event) -> None:
     if not await check_cd(event):
         return
     # 等待用户上传图片
-    msg = await wait_msg_callback(bot=bot, event=event, msg="上传图片")
+    msg = await wait_msg_callback(bot=bot, event=event, msg="上传图片", remove_text=True)
     photo: MessageMediaPhoto = msg.media
     if not photo:
         await msg.reply("你的图片呢？")
@@ -200,7 +218,9 @@ async def image2image(event: events.CallbackQuery.Event) -> None:
 async def fast_start(event: events.newmessage.NewMessage.Event):
     if not await check_cd(event):
         return
-    msg_event = await wait_msg_callback(bot=bot, event=event, msg="输入 prompt:")
+    msg_event = await wait_msg_callback(
+        bot=bot, event=event, msg="输入 prompt:", remove_text=True
+    )
     prompt = str(msg_event.message)
     try:
         seed = get_seed()

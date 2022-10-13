@@ -68,6 +68,7 @@ async def wait_msg_callback(
                     return e
         finally:
             if remove_text:
+                await cancel_btn.delete()
                 await ans.delete()
 
 async def wait_btn_callback(
