@@ -1,0 +1,5 @@
+httpx~=0.22.0
+Pillow~=9.2.0
+Telethon~=1.25.2
+python-socks~=2.0.3
+async-timeout~=4.0.2
